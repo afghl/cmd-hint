@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ["node_modules", "bun.lock"]
+    ignores: ["node_modules", "dist", "bun.lock"]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

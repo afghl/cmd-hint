@@ -1,15 +1,26 @@
 {
   "name": "cmd-hint",
   "version": "0.0.1",
+  "description": "CLI command hints from natural language.",
+  "license": "MIT",
   "type": "module",
-  "private": true,
   "bin": {
-    "cmd-hint": "./src/bin/index.ts"
+    "ch": "./dist/cli/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "dev": "bun run src/bin/index.ts",
+    "dev": "bun run src/cli/index.ts",
+    "build": "bun build src/cli/index.ts --target=node --packages external --outfile dist/cli/index.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "prepack": "bun run build"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -18,5 +29,10 @@
     "globals": "^17.6.0",
     "typescript": "latest",
     "typescript-eslint": "^8.61.0"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "^0.79.1",
+    "@earendil-works/pi-ai": "^0.79.1",
+    "commander": "^15.0.0"
   }
 }
