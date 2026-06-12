@@ -7,9 +7,9 @@
 当前阶段只保留极简 CLI 入口：
 
 - `-login`：登录分支占位
-- 自然语言输入：通过 pi 的最小 agent 生成命令提示
+- 自然语言输入：通过 pi 的最小 agent 生成多个命令候选，再用 Ink TUI 选择一个
 
-当前不要在 CLI 入口里实现核心逻辑、LLM 调用或复杂交互。入口只负责启动，命令分流放在 `src/command.ts`，agent 链路放在 `src/agent.ts`。
+当前不要在 CLI 入口里实现核心逻辑、LLM 调用或复杂交互。入口只负责启动，命令分流放在 `src/command.ts`，agent 链路放在 `src/agent.ts`，候选命令选择界面放在 `src/ui/`。
 
 ## 指令优先级
 
@@ -51,6 +51,8 @@ bunx tsc --noEmit
 - CLI 入口：`src/cli/index.ts`
 - 命令分流：`src/command.ts`
 - pi agent：`src/agent.ts`
+- TUI 选择器：`src/ui/select-command.tsx`
+- 共享类型：`src/types.ts`
 - 发布构建产物：`dist/cli/index.js`
 - 包配置：`package.json`
 - TypeScript 配置：`tsconfig.json`
@@ -65,6 +67,7 @@ bunx tsc --noEmit
 - CLI 入口保持薄：只做启动和错误处理。
 - `src/command.ts` 负责命令分流。
 - `src/agent.ts` 负责 pi agent 和模型调用。
+- `src/ui/` 负责 Ink 终端 UI；不要新增无参数交互模式，只有自然语言输入返回候选后才进入选择界面。
 - OpenAI API key 支持 `OPENAI_API_KEY`、`OPEN_API_KEY`、`CMD_HINT_API_KEY`。
 - OpenAI-compatible base URL 支持 `OPEN_BASE_URL`、`OPENAI_BASE_URL`、`CMD_HINT_BASE_URL`。
 - 当前只处理 `-login` 和自然语言输入；新增参数时同步更新 `README.md` 和本文件。

@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { runNaturalLanguageAgent } from "./agent";
+import { selectCommand } from "./ui/select-command";
 
 const commandArgs = new Set(["-login", "login", "-h", "--help", "-V", "--version"]);
 
@@ -40,5 +41,13 @@ export async function runCommand(args: string[]): Promise<void> {
     return;
   }
 
-  await runNaturalLanguageAgent(inputArgs.join(" ").trim());
+  const candidates = await runNaturalLanguageAgent(inputArgs.join(" ").trim());
+  const selected = await selectCommand(candidates);
+
+  if (!selected) {
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(selected.command);
 }

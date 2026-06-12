@@ -25,6 +25,8 @@ bun run build
 bun run dev what is this
 ```
 
+自然语言输入会返回多个候选命令，并在终端 UI 中选择一个；选中后只输出最终命令。
+
 在 zsh 里，`?`、`*` 这类字符会先被 shell 当通配符处理；需要加引号或转义：
 
 ```bash
