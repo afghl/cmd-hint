@@ -1,0 +1,22 @@
+{
+  "name": "cmd-hint",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "cmd-hint": "./src/bin/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/bin/index.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bun": "latest",
+    "eslint": "^10.4.1",
+    "globals": "^17.6.0",
+    "typescript": "latest",
+    "typescript-eslint": "^8.61.0"
+  }
+}
