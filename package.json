@@ -13,8 +13,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "dev": "bun run src/cli/index.ts",
-    "build": "bun build src/cli/index.ts --target=node --packages external --outfile dist/cli/index.js",
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --target=node --packages external --outfile dist/cli/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepack": "bun run build"

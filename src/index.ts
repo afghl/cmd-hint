@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { runCommand } from "../command";
+import { runCommand } from "./cmd/command";
 
 try {
   await runCommand(process.argv.slice(2));
