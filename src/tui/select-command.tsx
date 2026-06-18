@@ -169,7 +169,6 @@ function SelectCommand({ candidates, onSelect }: SelectCommandProps): React.Reac
               {selected && selectedPart ? (
                 <Box flexDirection="column">
                   <Text color="gray">{`  ${" ".repeat(selectedPart.start)}^`}</Text>
-                  <Text color="gray">{`  ${" ".repeat(selectedPart.start)}|`}</Text>
                   <Text color="gray">  {selectedPart.description || candidate.description || "暂无说明"}</Text>
                 </Box>
               ) : null}
@@ -204,7 +203,6 @@ export async function selectCommand(candidates: CommandCandidate[]): Promise<Com
           );
         }}
       />,
-      { alternateScreen: true }
     );
   });
 }

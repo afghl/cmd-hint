@@ -2,8 +2,8 @@ import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
 import { getEnvApiKey, getModels, type Api, type Model } from "@earendil-works/pi-ai";
 import { getOAuthApiKey } from "@earendil-works/pi-ai/oauth";
 
-import { loadAuthConfig, saveAuthConfig, type AuthConfig, type CodexAuth } from "./auth";
-import type { CommandCandidate, CommandExplanation } from "./types";
+import { loadAuthConfig, saveAuthConfig, type AuthConfig, type CodexAuth } from "../auth";
+import type { CommandCandidate, CommandExplanation } from "../types";
 
 const openAiProvider = "openai";
 const openAiCodexProvider = "openai-codex";

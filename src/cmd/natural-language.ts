@@ -1,4 +1,4 @@
-import { runNaturalLanguageAgent } from "../agent";
+import { runNaturalLanguageAgent } from "../agent/agent";
 import { selectCommand } from "../tui/select-command";
 
 export async function llmCommand(args: string[]): Promise<void> {
