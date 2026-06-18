@@ -1,29 +1,9 @@
 import type { OAuthLoginCallbacks, OAuthPrompt, OAuthSelectPrompt } from "@earendil-works/pi-ai/oauth";
 
-import { loginWithCodex, loginWithOpenAiCompatible } from "../auth/login";
+import { loginWithCodex } from "../auth/login";
 import { promptAuthInput } from "../tui/auth-input";
 import { selectAuthMethod } from "../tui/select-auth-method";
 import { selectOption } from "../tui/select-option";
-
-const defaultBaseUrl = "https://api.openai.com/v1";
-
-function firstNonEmpty(...values: Array<string | undefined>): string | undefined {
-  return values.find((value) => value?.trim());
-}
-
-function readApiKey(): string | undefined {
-  return process.env.CMD_HINT_API_KEY
-}
-
-function readBaseUrl(): string | undefined {
-  return process.env.CMD_HINT_BASE_URL
-}
-
-
-function failLogin(message: string): void {
-  console.error(message);
-  process.exitCode = 1;
-}
 
 async function promptRequired(prompt: OAuthPrompt): Promise<string> {
   const value = await promptAuthInput({

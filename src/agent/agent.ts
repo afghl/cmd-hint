@@ -113,7 +113,7 @@ async function resolveAgentAuth(): Promise<ResolvedAgentAuth> {
   }
 
   const config = await loadAuthConfig();
-
+  console.log("config: ", config)
   if (config.active === "codex" && config.codex) {
     return resolveCodexAuth(config, config.codex);
   }

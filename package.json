@@ -1,10 +1,11 @@
 {
   "name": "cmd-hint",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "CLI command hints from natural language.",
   "license": "MIT",
   "type": "module",
   "bin": {
+    "cmd-hint": "./dist/cli/index.js",
     "ch": "./dist/cli/index.js"
   },
   "files": [
@@ -13,8 +14,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "dev": "bun run src/cmd/index.ts",
-    "build": "bun build src/cmd/index.ts --target=node --packages external --outfile dist/cli/index.js",
+    "dev": "bun run src/cli/index.ts",
+    "build": "bun build src/cli/index.ts --target=node --packages external --outfile dist/cli/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepack": "bun run build"

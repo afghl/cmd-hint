@@ -4,7 +4,7 @@ import { llmCommand } from "./natural-language";
 
 const program = new Command().name("cmd-hint")
   .description("Use Agent in your shell.")
-  .version("0.0.1")
+  .version("0.0.3")
   .allowUnknownOption()
   // .showHelpAfterError()
   .exitOverride();
@@ -48,8 +48,3 @@ export async function run(args: string[]): Promise<void> {
 
   await llmCommand(args);
 }
-
-void run(process.argv.slice(2)).catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});

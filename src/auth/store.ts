@@ -120,7 +120,9 @@ export function getAuthConfigPath(): string {
 }
 
 export async function loadAuthConfig(): Promise<AuthConfig> {
+
   try {
+    console.log(authConfigPath)
     const content = await readFile(authConfigPath, "utf-8");
     return parseAuthConfig(JSON.parse(content) as unknown);
   } catch (error) {
