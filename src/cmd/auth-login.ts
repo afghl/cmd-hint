@@ -1,6 +1,6 @@
 import type { OAuthLoginCallbacks, OAuthPrompt, OAuthSelectPrompt } from "@earendil-works/pi-ai/oauth";
 
-import { loginWithCodex } from "../auth/login";
+import { activateOpenAiCompatible, loginWithCodex } from "../auth";
 import { promptAuthInput } from "../tui/auth-input";
 import { selectAuthMethod } from "../tui/select-auth-method";
 import { selectOption } from "../tui/select-option";
@@ -52,11 +52,6 @@ function createCodexCallbacks(): OAuthLoginCallbacks {
   };
 }
 
-async function runCodexLogin(): Promise<void> {
-  await loginWithCodex(createCodexCallbacks(), process.env.CMD_HINT_MODEL);
-  console.log("Codex login saved.");
-}
-
 export async function login(): Promise<void> {
   const method = await selectAuthMethod();
 
@@ -66,11 +61,13 @@ export async function login(): Promise<void> {
   }
 
   if (method === "codex") {
-    await runCodexLogin();
+    await loginWithCodex(createCodexCallbacks(), process.env.CMD_HINT_MODEL);
+    console.log("Codex login saved.");
     return;
   }
 
   if (method === "openai-compatible") {
-    console.log("Provide CMD_HINT_BASE_URL and CMD_HINT_API_KEY in env. Cmd-hint will automatically use them.");
+    await activateOpenAiCompatible(process.env.CMD_HINT_MODEL);
+    console.log("OpenAI-compatible auth activated.");
   }
 }

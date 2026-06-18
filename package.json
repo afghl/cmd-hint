@@ -1,6 +1,6 @@
 {
   "name": "cmd-hint",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "CLI command hints from natural language.",
   "license": "MIT",
   "type": "module",

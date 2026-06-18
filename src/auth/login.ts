@@ -1,65 +1,9 @@
-import { getOAuthProvider, type OAuthCredentials, type OAuthLoginCallbacks } from "@earendil-works/pi-ai/oauth";
+import { getOAuthProvider, type OAuthLoginCallbacks } from "@earendil-works/pi-ai/oauth";
 
-import { loadAuthConfig, saveAuthConfig, type AuthConfig, type OpenAiCompatibleAuth } from "./store";
-
-export const defaultAuthModel = "gpt-5.5";
-export const openAiCodexProvider = "openai-codex";
-
-function resolveModel(model: string | undefined): string {
-  return model?.trim() || defaultAuthModel;
-}
-
-function assertBaseUrl(baseUrl: string): void {
-  try {
-    new URL(baseUrl);
-  } catch {
-    throw new Error("invalid base URL");
-  }
-}
-
-function withCodexAuth(config: AuthConfig, credentials: OAuthCredentials, model?: string): AuthConfig {
-  return {
-    ...config,
-    version: 1,
-    active: "codex",
-    codex: {
-      type: "codex",
-      provider: openAiCodexProvider,
-      model: resolveModel(model ?? config.codex?.model),
-      credentials
-    }
-  };
-}
-
-function withOpenAiCompatibleAuth(
-  config: AuthConfig,
-  input: Pick<OpenAiCompatibleAuth, "baseUrl" | "apiKey"> & { model?: string }
-): AuthConfig {
-  const baseUrl = input.baseUrl.trim();
-  const apiKey = input.apiKey.trim();
-
-  if (!apiKey) {
-    throw new Error("API key is required");
-  }
-
-  assertBaseUrl(baseUrl);
-
-  return {
-    ...config,
-    version: 1,
-    active: "openai-compatible",
-    openaiCompatible: {
-      type: "openai-compatible",
-      provider: "openai",
-      model: resolveModel(input.model ?? config.openaiCompatible?.model),
-      baseUrl,
-      apiKey
-    }
-  };
-}
+import { loadAuthConfig, saveAuthConfig } from "./store";
 
 export async function loginWithCodex(callbacks: OAuthLoginCallbacks, model?: string): Promise<void> {
-  const provider = getOAuthProvider(openAiCodexProvider);
+  const provider = getOAuthProvider("openai-codex");
 
   if (!provider) {
     throw new Error("OpenAI Codex OAuth provider is unavailable");
@@ -68,13 +12,44 @@ export async function loginWithCodex(callbacks: OAuthLoginCallbacks, model?: str
   const credentials = await provider.login(callbacks);
   const config = await loadAuthConfig();
 
-  await saveAuthConfig(withCodexAuth(config, credentials, model));
+  await saveAuthConfig({
+    ...config,
+    version: 1,
+    active: "codex",
+    codex: {
+      type: "codex",
+      provider: "openai-codex",
+      model: model?.trim() || config.codex?.model || "gpt-5.5",
+      credentials
+    }
+  });
 }
 
-export async function loginWithOpenAiCompatible(
-  input: Pick<OpenAiCompatibleAuth, "baseUrl" | "apiKey"> & { model?: string }
-): Promise<void> {
+export async function activateOpenAiCompatible(model?: string): Promise<void> {
+  const missing: string[] = [];
+
+  if (!process.env.CMD_HINT_API_KEY?.trim()) {
+    missing.push("CMD_HINT_API_KEY");
+  }
+
+  if (!process.env.CMD_HINT_BASE_URL?.trim()) {
+    missing.push("CMD_HINT_BASE_URL");
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`missing OpenAI-compatible env: ${missing.join(", ")}`);
+  }
+
   const config = await loadAuthConfig();
 
-  await saveAuthConfig(withOpenAiCompatibleAuth(config, input));
+  await saveAuthConfig({
+    ...config,
+    version: 1,
+    active: "openai-compatible",
+    openaiCompatible: {
+      type: "openai-compatible",
+      provider: "openai",
+      model: model?.trim() || config.openaiCompatible?.model || "gpt-5.5"
+    }
+  });
 }

@@ -37,26 +37,9 @@ bun run dev what is this\?
 自然语言输入会通过 pi agent 调用 OpenAI：
 
 ```bash
-export OPENAI_API_KEY="your_api_key"
+export CMD_HINT_API_KEY="your_api_key"
+export CMD_HINT_BASE_URL="https://api.openai.com/v1"
 bun run dev "列出当前目录文件"
-```
-
-也可以使用别名：
-
-```bash
-export OPEN_API_KEY="your_api_key"
-```
-
-自定义 OpenAI-compatible base URL：
-
-```bash
-export OPEN_BASE_URL="https://api.openai.com/v1"
-```
-
-也兼容：
-
-```bash
-export OPENAI_BASE_URL="https://api.openai.com/v1"
 ```
 
 可选模型配置：

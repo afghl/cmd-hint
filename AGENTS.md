@@ -70,8 +70,9 @@ bunx tsc --noEmit
 - `src/cmd/command.ts` 负责命令分流。
 - `src/agent.ts` 负责 pi agent 和模型调用。
 - `src/tui/` 负责 Ink 终端 UI；不要新增无参数交互模式，只有自然语言输入返回候选后才进入选择界面。
-- OpenAI API key 支持 `CMD_HINT_API_KEY`、同时可提供`CMD_HINT_BASE_URL`
-- OpenAI-compatible base URL 支持 `OPEN_BASE_URL`、`OPENAI_BASE_URL`、`CMD_HINT_BASE_URL`。
+- 代码是负债。默认遵循 KISS 原则：优先写直接、可读、局部的代码，不要为了“看起来抽象”而新增概念。
+- 不要为只使用一次的字符串、环境变量名、一行表达式或简单字段访问创建常量、helper、wrapper 或单独文件。
+- OpenAI-compatible 只支持 `CMD_HINT_API_KEY` 和 `CMD_HINT_BASE_URL`。
 - 当前只处理 `-login` 和自然语言输入；新增参数时同步更新 `README.md` 和本文件。
 - 优先最小改动，避免无关重构。
 - 无明确理由时不要新增运行时依赖。

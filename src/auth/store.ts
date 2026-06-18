@@ -17,8 +17,6 @@ export interface OpenAiCompatibleAuth {
   type: "openai-compatible";
   provider: "openai";
   model: string;
-  baseUrl: string;
-  apiKey: string;
 }
 
 export interface AuthConfig {
@@ -86,19 +84,15 @@ function parseOpenAiCompatibleAuth(value: unknown): OpenAiCompatibleAuth | undef
   }
 
   const model = asString(value.model);
-  const baseUrl = asString(value.baseUrl);
-  const apiKey = asString(value.apiKey);
 
-  if (value.type !== "openai-compatible" || value.provider !== "openai" || !model || !baseUrl || !apiKey) {
+  if (value.type !== "openai-compatible" || value.provider !== "openai" || !model) {
     return undefined;
   }
 
   return {
     type: "openai-compatible",
     provider: "openai",
-    model,
-    baseUrl,
-    apiKey
+    model
   };
 }
 
@@ -120,9 +114,7 @@ export function getAuthConfigPath(): string {
 }
 
 export async function loadAuthConfig(): Promise<AuthConfig> {
-
   try {
-    console.log(authConfigPath)
     const content = await readFile(authConfigPath, "utf-8");
     return parseAuthConfig(JSON.parse(content) as unknown);
   } catch (error) {
