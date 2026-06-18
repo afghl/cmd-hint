@@ -1,9 +1,18 @@
 import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
 import { getEnvApiKey, getModels, type Api, type Model } from "@earendil-works/pi-ai";
+import { getOAuthApiKey } from "@earendil-works/pi-ai/oauth";
 
+import { loadAuthConfig, saveAuthConfig, type AuthConfig, type CodexAuth } from "./auth";
 import type { CommandCandidate, CommandExplanation } from "./types";
 
 const openAiProvider = "openai";
+const openAiCodexProvider = "openai-codex";
+const defaultModel = "gpt-5.5";
+
+interface ResolvedAgentAuth {
+  model: Model<Api>;
+  getApiKey: (provider: string) => string | Promise<string>;
+}
 
 function readApiKey(): string | undefined {
   return process.env.CMD_HINT_API_KEY ?? process.env.OPEN_API_KEY ?? getEnvApiKey(openAiProvider);
@@ -13,21 +22,110 @@ function readBaseUrl(): string | undefined {
   return process.env.CMD_HINT_BASE_URL ?? process.env.OPEN_BASE_URL ?? process.env.OPENAI_BASE_URL;
 }
 
-function resolveOpenAiModel(): Model<Api> {
-  const modelId = process.env.CMD_HINT_MODEL ?? "gpt-5.5";
-  const model = getModels(openAiProvider).find((candidate) => candidate.id === modelId);
+function resolveModel(provider: typeof openAiProvider | typeof openAiCodexProvider, modelId: string, baseUrl?: string): Model<Api> {
+  const model = (getModels(provider) as Model<Api>[]).find((candidate) => candidate.id === modelId);
 
   if (!model) {
-    throw new Error(`unknown ${openAiProvider} model: ${modelId}`);
+    throw new Error(`unknown ${provider} model: ${modelId}`);
   }
-
-  const baseUrl = readBaseUrl();
 
   return baseUrl ? { ...model, baseUrl } : model;
 }
 
 function getApiKeyHelp(): string {
-  return "missing API key. run: export OPENAI_API_KEY=your_api_key";
+  return "missing API key. run: cmd-hint auth login or export OPENAI_API_KEY=your_api_key";
+}
+
+function resolveEnvAuth(): ResolvedAgentAuth | undefined {
+  const apiKey = readApiKey();
+
+  if (!apiKey) {
+    return undefined;
+  }
+
+  return {
+    model: resolveModel(openAiProvider, process.env.CMD_HINT_MODEL ?? defaultModel, readBaseUrl()),
+    getApiKey: () => apiKey
+  };
+}
+
+async function saveRefreshedCodexCredentials(config: AuthConfig, codex: CodexAuth): Promise<void> {
+  const latestConfig = await loadAuthConfig();
+  const latestCodex = latestConfig.codex ?? codex;
+
+  await saveAuthConfig({
+    ...latestConfig,
+    active: latestConfig.active ?? config.active,
+    codex: {
+      ...latestCodex,
+      credentials: codex.credentials
+    }
+  });
+}
+
+function resolveCodexAuth(config: AuthConfig, codex: CodexAuth): ResolvedAgentAuth {
+  return {
+    model: resolveModel(openAiCodexProvider, process.env.CMD_HINT_MODEL ?? codex.model),
+    getApiKey: async (provider) => {
+      if (provider !== openAiCodexProvider) {
+        throw new Error(`unexpected provider for Codex auth: ${provider}`);
+      }
+
+      const result = await getOAuthApiKey(openAiCodexProvider, {
+        [openAiCodexProvider]: codex.credentials
+      });
+
+      if (!result) {
+        throw new Error(getApiKeyHelp());
+      }
+
+      if (result.newCredentials !== codex.credentials) {
+        await saveRefreshedCodexCredentials(config, {
+          ...codex,
+          credentials: result.newCredentials
+        });
+      }
+
+      return result.apiKey;
+    }
+  };
+}
+
+function resolveOpenAiCompatibleAuth(config: AuthConfig): ResolvedAgentAuth | undefined {
+  const auth = config.openaiCompatible;
+
+  if (!auth) {
+    return undefined;
+  }
+
+  return {
+    model: resolveModel(openAiProvider, process.env.CMD_HINT_MODEL ?? auth.model, readBaseUrl() ?? auth.baseUrl),
+    getApiKey: () => auth.apiKey
+  };
+}
+
+async function resolveAgentAuth(): Promise<ResolvedAgentAuth> {
+  const envAuth = resolveEnvAuth();
+
+  if (envAuth) {
+    return envAuth;
+  }
+
+  const config = await loadAuthConfig();
+
+  if (config.active === "codex" && config.codex) {
+    return resolveCodexAuth(config, config.codex);
+  }
+
+  if (config.active === "openai-compatible") {
+    const auth = resolveOpenAiCompatibleAuth(config);
+
+    if (auth) {
+      return auth;
+    }
+  }
+
+  throw new Error(getApiKeyHelp());
 }
 
 function extractText(message: AgentMessage): string {
@@ -131,23 +229,17 @@ function parseCandidates(text: string): CommandCandidate[] {
 }
 
 export async function runNaturalLanguageAgent(input: string): Promise<CommandCandidate[]> {
-  const apiKey = readApiKey();
-
-  if (!apiKey) {
-    throw new Error(getApiKeyHelp());
-  }
-
-  const model = resolveOpenAiModel();
+  const auth = await resolveAgentAuth();
 
   const agent = new Agent({
     initialState: {
       systemPrompt:
         '你是 cmd-hint 的终端命令助手。根据用户自然语言生成 3 个可执行 shell 命令候选。只输出 JSON，不要 Markdown，不要解释。格式为 {"candidates":[{"command":"...","description":"...","explanations":[{"token":"...","description":"..."}],"risk":"low|medium|high"}]}。description 用中文简短解释整条命令会做什么。explanations 按 command 中从左到右出现的关键片段生成，至少包含主命令、重要参数、管道或重定向；token 必须是 command 中真实出现的片段，description 用中文解释该片段作用。不要执行命令。',
-      model,
+      model: auth.model,
       thinkingLevel: "off",
       tools: []
     },
-    getApiKey: () => apiKey
+    getApiKey: auth.getApiKey
   });
 
   await agent.prompt(input);

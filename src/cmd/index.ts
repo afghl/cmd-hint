@@ -1,6 +1,5 @@
-import { Command } from "commander";
-
-
+import { Command, CommanderError } from "commander";
+import { registerAuthCommands } from "./auth";
 import { llmCommand } from "./natural-language";
 
 const program = new Command().name("cmd-hint")
@@ -8,24 +7,49 @@ const program = new Command().name("cmd-hint")
   .version("0.0.1")
   .allowUnknownOption()
   // .showHelpAfterError()
-  .exitOverride()
+  .exitOverride();
 
+registerAuthCommands(program);
 
-export function register(ns: string, fn: (cmd: Command) => void) {
-  fn(program.command(ns))
+function maybeCommand(args: string[]): boolean {
+  const [first] = args;
+
+  if (!first) return true;
+
+  if (first === "-h" || first === "--help" || first === "-V" || first === "--version") {
+    return true;
+  }
+
+  return program.commands.some((command) => {
+    return command.name() === first || command.alias() === first;
+  });
 }
-
-import "../auth";
 
 export async function run(args: string[]): Promise<void> {
-  try {
-    const result = await program.parseAsync(args, { from: "user" })
-    console.log(result)
-  } catch (error) {
-    console.log("something unexpecetd")
-    console.log(typeof (error))
-    // await llmCommand(args);
+  if (args.length === 0) {
+    program.outputHelp();
+    return;
   }
+
+  if (maybeCommand(args)) {
+    try {
+      await program.parseAsync(args, { from: "user" });
+    } catch (error) {
+      if (error instanceof CommanderError) {
+        process.exitCode = error.exitCode;
+        return;
+      }
+
+      throw error;
+    }
+
+    return;
+  }
+
+  await llmCommand(args);
 }
 
-run(process.argv.slice(2))
+void run(process.argv.slice(2)).catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});
