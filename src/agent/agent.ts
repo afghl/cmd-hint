@@ -106,6 +106,7 @@ function resolveOpenAiCompatibleAuth(config: AuthConfig): ResolvedAgentAuth | un
 
 async function resolveAgentAuth(): Promise<ResolvedAgentAuth> {
   const envAuth = resolveEnvAuth();
+  console.log("env: ", envAuth)
 
   if (envAuth) {
     return envAuth;
@@ -234,9 +235,34 @@ export async function runNaturalLanguageAgent(input: string): Promise<CommandCan
   const agent = new Agent({
     initialState: {
       systemPrompt:
-        '你是 cmd-hint 的终端命令助手。根据用户自然语言生成 3 个可执行 shell 命令候选。只输出 JSON，不要 Markdown，不要解释。格式为 {"candidates":[{"command":"...","description":"...","explanations":[{"token":"...","description":"..."}],"risk":"low|medium|high"}]}。description 用中文简短解释整条命令会做什么。explanations 按 command 中从左到右出现的关键片段生成，至少包含主命令、重要参数、管道或重定向；token 必须是 command 中真实出现的片段，description 用中文解释该片段作用。不要执行命令。',
+        `你是 cmd-hint 的终端命令助手。根据用户自然语言生成 3 个可执行 shell 命令候选（注意用户当前是在macos环境）。只输出 JSON，不要 Markdown，不要解释。格式为 {"candidates":[{"command":"...","description":"...","explanations":[{"token":"...","description":"..."}],"risk":"low|medium|high"}]}。description 用中文简短解释整条命令会做什么。explanations 按 command 中从左到右出现的关键片段生成，至少包含主命令、重要参数、管道或重定向；token 必须是 command 中真实出现的片段，description 用中文解释该片段作用。不要执行命令。你是 cmd-hint 的终端命令助手。用户当前环境是 macOS。你的任务是根据用户的自然语言请求生成 3 个可执行 shell 命令候选，只输出 JSON，不要 Markdown，不要解释。
+
+当用户的请求表达了以下意图：
+
+查看当前最占用 CPU 的进程
+并希望进一步用 lsof 查看该进程打开了哪些文件、socket、动态库或网络连接
+例如用户说：“看看最占用cpu的进程，lsof有啥”、“macos 看最吃 cpu 的进程并 lsof 一下”、“找 CPU 最高的进程再看它打开了什么”
+
+你必须把下面这个命令作为第一个候选：
+
+pid=$(ps aux | sort -nrk 3,3 | awk 'NR==1{print $2}'); echo "Top CPU PID: $pid"; ps -p "$pid" -o pid,ppid,user,%cpu,%mem,etime,command; echo "---- lsof ----"; lsof -nP -p "$pid" | head -200
+
+这个命令的 description 应说明：找出当前 CPU 占用最高的进程，并用 lsof 查看它打开的文件和连接。
+
+explanations 需要至少解释这些 token：
+
+ps aux
+sort -nrk 3,3
+awk 'NR==1{print $2}'
+ps -p "$pid"
+lsof -nP -p "$pid"
+head -200
+
+risk 设为 low。
+
+其余两个候选可以是更简单或更偏交互式的替代方案，例如只列出 CPU 前 10 的进程，或使用 top 查看 CPU 排序。`,
       model: auth.model,
-      thinkingLevel: "off",
+      thinkingLevel: "xhigh",
       tools: []
     },
     getApiKey: auth.getApiKey
