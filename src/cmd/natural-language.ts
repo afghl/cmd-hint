@@ -1,7 +1,7 @@
 import { runNaturalLanguageAgent } from "../agent";
 import { selectCommand } from "../tui/select-command";
 
-export async function runNaturalLanguageCommand(args: string[]): Promise<void> {
+export async function llmCommand(args: string[]): Promise<void> {
   const candidates = await runNaturalLanguageAgent(args.join(" ").trim());
   const selected = await selectCommand(candidates);
 
